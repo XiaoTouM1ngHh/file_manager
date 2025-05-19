@@ -141,3 +141,8 @@ GET /api/keys/<key_id>/download
 ## 许可证
 
 本项目采用 MIT 许可证 
+
+
+## 界面：
+![](https://github.com/XiaoTouM1ngHh/file_manager/blob/main/admin.png)
+![](https://github.com/XiaoTouM1ngHh/file_manager/blob/main/login.png)
