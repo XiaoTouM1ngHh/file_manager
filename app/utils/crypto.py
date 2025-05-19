@@ -52,7 +52,7 @@ def generate_key(password, salt=None):
         logger.error(f"生成密钥失败: {str(e)}")
         raise
 
-def get_key_format_for_cpp(key):
+
     """
     将密钥转换为C++友好的格式
     
@@ -219,7 +219,6 @@ def calculate_md5(file_path):
         logger.error(f"计算MD5失败: {str(e)}")
         raise
 
-def create_key_file(key, salt, output_path):
     """
     创建密钥文件，包含解密需要的所有信息
     便于C++程序读取
