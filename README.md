@@ -114,16 +114,6 @@ GET /api/files/<file_guid>/content
 GET /api/files/count
 ```
 
-### 获取密钥信息
-```
-GET /api/keys
-```
-
-### 下载密钥
-```
-GET /api/keys/<key_id>/download
-```
-
 ## C++客户端库
 
 项目提供了Windows平台的C++客户端库（FileManagerAPI），用于与服务端API进行交互。
