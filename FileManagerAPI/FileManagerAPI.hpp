@@ -4,7 +4,7 @@
 #include <vector>
 #include <windows.h>
 #include <winhttp.h>
-#include <nlohmann/json.hpp>
+#include "json.hpp"
 #include <fstream>
 #include <filesystem>
 #include <memory>
@@ -165,11 +165,36 @@ public:
                 fs::create_directories(saveDir);
             }
 
-            std::ofstream file(savePath, std::ios::binary);
-            if (!file) {
-                throw FileManagerAPIException("无法创建文件: " + savePath);
+            // 使用Windows API创建文件
+            HANDLE hFile = CreateFileA(
+                savePath.c_str(),
+                GENERIC_WRITE,
+                0,
+                NULL,
+                CREATE_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL
+            );
+
+            if (hFile == INVALID_HANDLE_VALUE) {
+                throw FileManagerAPIException("无法创建文件: " + savePath + ", 错误码: " + std::to_string(GetLastError()));
             }
-            file.write(response.c_str(), response.length());
+
+            // 写入数据
+            DWORD bytesWritten = 0;
+            if (!WriteFile(
+                hFile,
+                response.c_str(),
+                static_cast<DWORD>(response.length()),
+                &bytesWritten,
+                NULL
+            )) {
+                CloseHandle(hFile);
+                throw FileManagerAPIException("写入文件失败: " + savePath + ", 错误码: " + std::to_string(GetLastError()));
+            }
+
+            // 关闭文件句柄
+            CloseHandle(hFile);
             return true;
         }
         catch (const std::exception& e) {
@@ -192,11 +217,36 @@ public:
                 fs::create_directories(saveDir);
             }
 
-            std::ofstream file(savePath, std::ios::binary);
-            if (!file) {
+            // 使用Windows API创建文件
+            HANDLE hFile = CreateFileW(
+                savePath.c_str(),
+                GENERIC_WRITE,
+                0,
+                NULL,
+                CREATE_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL
+            );
+
+            if (hFile == INVALID_HANDLE_VALUE) {
                 throw FileManagerAPIException(L"无法创建文件: " + savePath);
             }
-            file.write(response.c_str(), response.length());
+
+            // 写入数据
+            DWORD bytesWritten = 0;
+            if (!WriteFile(
+                hFile,
+                response.c_str(),
+                static_cast<DWORD>(response.length()),
+                &bytesWritten,
+                NULL
+            )) {
+                CloseHandle(hFile);
+                throw FileManagerAPIException(L"写入文件失败: " + savePath);
+            }
+
+            // 关闭文件句柄
+            CloseHandle(hFile);
             return true;
         }
         catch (const std::exception& e) {
@@ -208,16 +258,20 @@ public:
     // 计算本地文件的MD5值
     static std::string CalculateLocalFileMD5(const std::string& filePath) {
         try {
-            // 打开文件
-            std::ifstream file(filePath, std::ios::binary);
-            if (!file) {
-                throw FileManagerAPIException("无法打开文件: " + filePath);
-            }
+            // 使用Windows API打开文件
+            HANDLE hFile = CreateFileA(
+                filePath.c_str(),
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                NULL,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL
+            );
 
-            // 获取文件大小
-            file.seekg(0, std::ios::end);
-            size_t fileSize = file.tellg();
-            file.seekg(0, std::ios::beg);
+            if (hFile == INVALID_HANDLE_VALUE) {
+                throw FileManagerAPIException("无法打开文件: " + filePath + ", 错误码: " + std::to_string(GetLastError()));
+            }
 
             // 创建MD5哈希对象
             HCRYPTPROV hProv = 0;
@@ -226,28 +280,32 @@ public:
             DWORD hashSize = sizeof(hash);
 
             if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+                CloseHandle(hFile);
                 throw FileManagerAPIException("无法创建加密上下文");
             }
 
             if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash)) {
                 CryptReleaseContext(hProv, 0);
+                CloseHandle(hFile);
                 throw FileManagerAPIException("无法创建哈希对象");
             }
 
             // 读取文件并计算MD5
-            const size_t bufferSize = 8192;
-            std::vector<char> buffer(bufferSize);
-            while (file) {
-                file.read(buffer.data(), bufferSize);
-                std::streamsize count = file.gcount();
-                if (count > 0) {
-                    if (!CryptHashData(hHash, (BYTE*)buffer.data(), count, 0)) {
-                        CryptDestroyHash(hHash);
-                        CryptReleaseContext(hProv, 0);
-                        throw FileManagerAPIException("计算哈希值失败");
-                    }
+            const DWORD bufferSize = 8192;
+            BYTE buffer[bufferSize];
+            DWORD bytesRead = 0;
+
+            while (ReadFile(hFile, buffer, bufferSize, &bytesRead, NULL) && bytesRead > 0) {
+                if (!CryptHashData(hHash, buffer, bytesRead, 0)) {
+                    CryptDestroyHash(hHash);
+                    CryptReleaseContext(hProv, 0);
+                    CloseHandle(hFile);
+                    throw FileManagerAPIException("计算哈希值失败");
                 }
             }
+
+            // 关闭文件句柄
+            CloseHandle(hFile);
 
             // 获取最终的哈希值
             if (!CryptGetHashParam(hHash, HP_HASHVAL, hash, &hashSize, 0)) {
@@ -273,19 +331,23 @@ public:
         }
     }
 
-    // 计算本地文件的MD5值
+    // 计算本地文件的MD5值 (wstring版本)
     static std::string CalculateLocalFileMD5(const std::wstring& filePath) {
         try {
-            // 打开文件
-            std::ifstream file(filePath, std::ios::binary);
-            if (!file) {
+            // 使用Windows API打开文件
+            HANDLE hFile = CreateFileW(
+                filePath.c_str(),
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                NULL,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL
+            );
+
+            if (hFile == INVALID_HANDLE_VALUE) {
                 throw FileManagerAPIException(L"无法打开文件: " + filePath);
             }
-
-            // 获取文件大小
-            file.seekg(0, std::ios::end);
-            size_t fileSize = file.tellg();
-            file.seekg(0, std::ios::beg);
 
             // 创建MD5哈希对象
             HCRYPTPROV hProv = 0;
@@ -294,28 +356,32 @@ public:
             DWORD hashSize = sizeof(hash);
 
             if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+                CloseHandle(hFile);
                 throw FileManagerAPIException(L"无法创建加密上下文");
             }
 
             if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash)) {
                 CryptReleaseContext(hProv, 0);
+                CloseHandle(hFile);
                 throw FileManagerAPIException("无法创建哈希对象");
             }
 
             // 读取文件并计算MD5
-            const size_t bufferSize = 8192;
-            std::vector<char> buffer(bufferSize);
-            while (file) {
-                file.read(buffer.data(), bufferSize);
-                std::streamsize count = file.gcount();
-                if (count > 0) {
-                    if (!CryptHashData(hHash, (BYTE*)buffer.data(), count, 0)) {
-                        CryptDestroyHash(hHash);
-                        CryptReleaseContext(hProv, 0);
-                        throw FileManagerAPIException("计算哈希值失败");
-                    }
+            const DWORD bufferSize = 8192;
+            BYTE buffer[bufferSize];
+            DWORD bytesRead = 0;
+
+            while (ReadFile(hFile, buffer, bufferSize, &bytesRead, NULL) && bytesRead > 0) {
+                if (!CryptHashData(hHash, buffer, bytesRead, 0)) {
+                    CryptDestroyHash(hHash);
+                    CryptReleaseContext(hProv, 0);
+                    CloseHandle(hFile);
+                    throw FileManagerAPIException("计算哈希值失败");
                 }
             }
+
+            // 关闭文件句柄
+            CloseHandle(hFile);
 
             // 获取最终的哈希值
             if (!CryptGetHashParam(hHash, HP_HASHVAL, hash, &hashSize, 0)) {
@@ -390,8 +456,6 @@ private:
     INTERNET_PORT port_;       // 端口号
     std::wstring urlPath_;     // URL路径前缀
     bool isSecure_;            // 是否是HTTPS
-
-
 
     // 解析URL
     void parseUrl(const std::wstring& url) {

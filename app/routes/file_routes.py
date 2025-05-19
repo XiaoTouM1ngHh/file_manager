@@ -47,7 +47,7 @@ def upload():
         if current_user.is_admin:
             keys = EncryptionKey.query.all()
         else:
-            keys = EncryptionKey.query.filter_by(user_id=current_user.id).all()
+            keys = EncryptionKey.query.all()
         
         # 获取允许的文件扩展名
         allowed_extensions = {ext.extension for ext in AllowedExtension.query.filter_by(is_active=True).all()}
@@ -95,11 +95,6 @@ def upload():
                 encryption_key = EncryptionKey.query.get(encryption_key_id)
                 if not encryption_key:
                     flash('所选密钥不存在', 'error')
-                    return render_template('file/upload.html', categories=categories, keys=keys)
-                
-                # 检查密钥权限
-                if not current_user.is_admin and encryption_key.user_id != current_user.id:
-                    flash('您没有权限使用此密钥', 'error')
                     return render_template('file/upload.html', categories=categories, keys=keys)
             
             # 保存文件

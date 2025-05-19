@@ -1,6 +1,6 @@
 # FileManagerAPI
 
-FileManagerAPI是一个C++客户端库，用于与文件管理系统服务端API进行交互。该库提供了文件分类查询、文件信息获取、文件下载和MD5校验等功能。
+FileManagerAPI是一个C++客户端库，用于与文件管理系统服务端API进行交互。该库提供了文件分类查询、文件信息获取、文件下载、MD5校验和文件解密等功能。
 
 ## 功能特性
 
@@ -14,6 +14,7 @@ FileManagerAPI是一个C++客户端库，用于与文件管理系统服务端API
 ## 依赖库
 
 - Windows API (WinHTTP)
+- Windows Cryptography API
 - nlohmann/json - JSON解析库
 - 标准C++库 (filesystem, fstream等)
 
@@ -51,6 +52,7 @@ try {
         std::cout << "文件GUID: " << file.guid << std::endl;
         std::cout << "文件名称: " << file.filename << std::endl;
         std::cout << "文件大小: " << file.size_formatted << std::endl;
+        std::cout << "是否加密: " << (file.is_encrypted ? "是" : "否") << std::endl;
     }
 } catch (const FileManagerAPIException& e) {
     std::cerr << "错误: " << e.what() << std::endl;
@@ -82,12 +84,75 @@ try {
 }
 ```
 
-### 获取文件总数
+### 文件解密
+
+系统支持使用Fernet加密格式的文件解密，与服务端的Python加密机制完全兼容。提供以下三种文件解密方式：
+
+#### 1. 指定文件路径解密
 
 ```cpp
 try {
-    size_t totalFiles = api.GetTotalFiles();
-    std::cout << "系统中的文件总数: " << totalFiles << std::endl;
+    // 解密文件并保存到新位置
+    std::wstring encryptedFile = L"C:\\Downloads\\secret.docx";
+    std::wstring decryptedFile = L"C:\\Downloads\\decrypted.doc";
+    std::string decryptKey = "your_fernet_key_here"; // 必须是有效的Fernet密钥
+    
+    if (api.DecryptFile(encryptedFile, decryptedFile, decryptKey)) {
+        std::cout << "文件解密成功" << std::endl;
+    } else {
+        std::cout << "文件解密失败" << std::endl;
+    }
+} catch (const FileManagerAPIException& e) {
+    std::cerr << "解密错误: " << e.what() << std::endl;
+}
+```
+
+#### 2. 自动解密（根据文件扩展名）
+
+```cpp
+try {
+    // 自动检测是否需要解密并处理
+    std::wstring filePath = L"C:\\Downloads\\document.docx";
+    std::string decryptKey = "your_fernet_key_here"; // 必须是有效的Fernet密钥
+    
+    if (api.AutoDecryptFile(filePath, decryptKey)) {
+        std::cout << "文件处理成功" << std::endl;
+        // 如果是加密文件，解密后的文件将保存为C:\Downloads\document.doc
+    } else {
+        std::cout << "文件处理失败" << std::endl;
+    }
+} catch (const FileManagerAPIException& e) {
+    std::cerr << "处理错误: " << e.what() << std::endl;
+}
+```
+
+#### 3. 下载并解密文件
+
+```cpp
+try {
+    std::string fileGuid = "file-guid-here";
+    std::wstring savePath = L"C:\\Downloads\\encrypted.docx";
+    std::string decryptKey = "your_fernet_key_here"; // 必须是有效的Fernet密钥
+    
+    // 下载文件
+    if (api.DownloadFile(fileGuid, savePath)) {
+        std::cout << "文件下载成功" << std::endl;
+        
+        // 获取文件信息
+        FileInfo fileInfo = api.GetFileInfo(fileGuid);
+        
+        // 如果是加密文件，进行解密
+        if (fileInfo.is_encrypted) {
+            std::wstring decryptedPath = savePath.substr(0, savePath.length() - 1);
+            if (api.DecryptFile(savePath, decryptedPath, decryptKey)) {
+                std::cout << "文件解密成功" << std::endl;
+            } else {
+                std::cout << "文件解密失败" << std::endl;
+            }
+        }
+    } else {
+        std::cout << "文件下载失败" << std::endl;
+    }
 } catch (const FileManagerAPIException& e) {
     std::cerr << "错误: " << e.what() << std::endl;
 }
