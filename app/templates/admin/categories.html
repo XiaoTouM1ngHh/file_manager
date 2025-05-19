@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}文件分类管理 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">文件分类管理</h1>
+        <p class="text-muted">管理系统中的文件分类</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+        <i class="fas fa-plus me-1"></i> 添加分类
+    </button>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if categories %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>描述</th>
+                        <th>颜色</th>
+                        <th>文件数量</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td>{{ category.id }}</td>
+                        <td>{{ category.name }}</td>
+                        <td>{{ category.description or '-' }}</td>
+                        <td>
+                            <span class="badge rounded-pill" style="background-color: {{ category.color or '#6c757d' }}">
+                                {{ category.color or '默认颜色' }}
+                            </span>
+                        </td>
+                        <td>{{ category.files_count }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        onclick="editCategory('{{ category.id }}', '{{ category.name }}', '{{ category.description or '' }}', '{{ category.color or '' }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="deleteCategory('{{ category.id }}', '{{ category.name }}', {{ category.files_count }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 暂时移除分页，直到后端提供pagination对象 -->
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-folder fa-3x text-secondary"></i>
+            </div>
+            <h4>暂无文件分类</h4>
+            <p class="text-muted">您可以添加新的分类来组织文件</p>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                <i class="fas fa-plus me-1"></i> 添加分类
+            </button>
+        </div>
+        {% endif %}
+
+        <!-- 分页 -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.categories', page=pagination.prev_num) }}">上一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">上一页</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                        {% if page %}
+                            {% if page == pagination.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.categories', page=page) }}">{{ page }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.categories', page=pagination.next_num) }}">下一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">下一页</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 添加分类模态框 -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">添加文件分类</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.create_category') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">分类名称</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">描述</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="color" class="form-label">颜色 (十六进制)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">#</span>
+                            <input type="text" class="form-control" id="color" name="color" placeholder="例如: 3498db" pattern="[0-9a-fA-F]{6}">
+                        </div>
+                        <div class="form-text">可选，输入不带 # 的六位十六进制颜色值，例如: 3498db (蓝色)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑分类模态框 -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCategoryModalLabel">编辑文件分类</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCategoryForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_name" class="form-label">分类名称</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">描述</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_color" class="form-label">颜色 (十六进制)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">#</span>
+                            <input type="text" class="form-control" id="edit_color" name="color" pattern="[0-9a-fA-F]{6}">
+                        </div>
+                        <div class="form-text">可选，输入不带 # 的六位十六进制颜色值</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 删除分类确认模态框 -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCategoryModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除分类 <strong id="delete_category_name"></strong> 吗？</p>
+                <div id="delete_category_warning" class="alert alert-danger d-none">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span>无法删除此分类，当前有关联的文件。请先删除关联文件或修改文件分类。</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteCategoryForm" method="POST">
+                    <button type="submit" class="btn btn-danger" id="delete_category_btn">删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editCategory(id, name, description, color) {
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_description').value = description;
+        document.getElementById('edit_color').value = color.replace('#', '');
+        document.getElementById('editCategoryForm').action = "{{ url_for('admin.edit_category', category_id=0) }}".replace('0', id);
+        
+        // 显示模态框
+        new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+    }
+    
+    function deleteCategory(id, name, filesCount) {
+        document.getElementById('delete_category_name').textContent = name;
+        document.getElementById('deleteCategoryForm').action = "{{ url_for('admin.delete_category', category_id=0) }}".replace('0', id);
+        
+        // 检查是否有关联文件
+        const warningEl = document.getElementById('delete_category_warning');
+        const deleteBtn = document.getElementById('delete_category_btn');
+        
+        if (filesCount > 0) {
+            warningEl.classList.remove('d-none');
+            deleteBtn.disabled = true;
+        } else {
+            warningEl.classList.add('d-none');
+            deleteBtn.disabled = false;
+        }
+        
+        // 显示模态框
+        new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
+    }
+</script>
+{% endblock %} 

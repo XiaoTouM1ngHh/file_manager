@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{{ file.filename }} - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">文件详情</h1>
+        <p class="text-muted">查看文件详细信息</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('file.edit_file', file_guid=file.guid) }}" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i> 编辑文件
+        </a>
+        <a href="{{ url_for('file.download_file', file_guid=file.guid) }}" class="btn btn-success">
+            <i class="fas fa-download me-2"></i> 下载文件
+        </a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteFileModal">
+            <i class="fas fa-trash me-2"></i> 删除文件
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">基本信息</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th style="width: 200px;">文件名</th>
+                        <td>{{ file.filename }}</td>
+                    </tr>
+                    <tr>
+                        <th>原始文件名</th>
+                        <td>{{ file.original_filename }}</td>
+                    </tr>
+                    <tr>
+                        <th>文件大小</th>
+                        <td>{{ (file.size / 1024)|round(2) }} KB</td>
+                    </tr>
+                    <tr>
+                        <th>文件类型</th>
+                        <td>{{ file.original_filename.split('.')[-1].upper() }}</td>
+                    </tr>
+                    <tr>
+                        <th>MD5哈希值</th>
+                        <td><code>{{ file.md5 }}</code></td>
+                    </tr>
+                    <tr>
+                        <th>上传时间</th>
+                        <td>{{ file.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    <tr>
+                        <th>最后更新</th>
+                        <td>{{ file.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    <tr>
+                        <th>上传者</th>
+                        <td>{{ file.owner.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>文件分类</th>
+                        <td>{{ file.category.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>加密状态</th>
+                        <td>
+                            {% if file.is_encrypted %}
+                            <span class="badge bg-warning">已加密</span>
+                            {% else %}
+                            <span class="badge bg-success">未加密</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if file.is_encrypted %}
+                    <tr>
+                        <th>加密密钥</th>
+                        <td>{{ file.encryption_key.name }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        {% if file.description %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">文件描述</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ file.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">文件预览</h5>
+            </div>
+            <div class="card-body text-center">
+                {% set ext = file.original_filename.split('.')[-1].lower() %}
+                {% if ext in ['jpg', 'jpeg', 'png', 'gif'] %}
+                <img src="{{ url_for('file.download_file', file_guid=file.guid) }}" class="img-fluid" alt="{{ file.filename }}">
+                {% elif ext in ['pdf'] %}
+                <div class="text-muted mb-3">
+                    <i class="fas fa-file-pdf fa-4x"></i>
+                </div>
+                <p>PDF文件预览</p>
+                {% elif ext in ['doc', 'docx'] %}
+                <div class="text-muted mb-3">
+                    <i class="fas fa-file-word fa-4x"></i>
+                </div>
+                <p>Word文档预览</p>
+                {% elif ext in ['xls', 'xlsx'] %}
+                <div class="text-muted mb-3">
+                    <i class="fas fa-file-excel fa-4x"></i>
+                </div>
+                <p>Excel表格预览</p>
+                {% elif ext in ['ppt', 'pptx'] %}
+                <div class="text-muted mb-3">
+                    <i class="fas fa-file-powerpoint fa-4x"></i>
+                </div>
+                <p>PowerPoint预览</p>
+                {% else %}
+                <div class="text-muted mb-3">
+                    <i class="fas fa-file fa-4x"></i>
+                </div>
+                <p>文件预览不可用</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除文件确认对话框 -->
+<div class="modal fade" id="deleteFileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">删除文件确认</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                确定要删除文件 <strong>{{ file.filename }}</strong> 吗？此操作不可撤销。
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form action="{{ url_for('file.delete_file', file_guid=file.guid) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">删除文件</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

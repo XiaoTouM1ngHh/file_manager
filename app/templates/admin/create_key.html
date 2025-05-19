@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}创建密钥 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">创建新密钥</h1>
+        <p class="text-muted">添加新的文件加密密钥</p>
+    </div>
+    <a href="{{ url_for('admin.encryption_keys') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> 返回密钥列表
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-xl-6 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.create_key') }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">密钥名称</label>
+                        <input type="text" id="name" name="name" class="form-control" value="{{ name or '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">描述</label>
+                        <textarea id="description" name="description" class="form-control" rows="3">{{ description or '' }}</textarea>
+                        <div class="form-text">可选，对密钥用途的简短说明</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                        <div class="form-text">用于生成加密密钥的密码。请确保使用强密码并妥善保管，无法恢复已加密文件。</div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>重要提示：</strong> 此密码将用于生成加密密钥，一旦创建无法查看或修改。请务必记住此密码，否则将无法解密使用此密钥加密的文件。
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('admin.encryption_keys') }}" class="btn btn-secondary me-2">取消</a>
+                        <button type="submit" class="btn btn-primary">创建密钥</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

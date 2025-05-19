@@ -1,0 +1,113 @@
+# 文件管理系统
+
+一个基于Flask和Bootstrap的文件管理系统，支持用户权限管理、加密存储和API接口。
+
+## 功能特点
+
+- **用户权限管理**：管理员和普通用户权限分离
+- **文件加密存储**：支持使用密钥加密文件，保证文件安全
+- **文件分类管理**：支持自定义文件分类
+- **可定制上传规则**：可配置允许的文件类型
+- **简洁现代的界面**：基于Bootstrap的响应式界面
+- **完善的API接口**：支持第三方系统接入
+
+## 系统需求
+
+- Python 3.8+
+- 支持SQLite (默认), MySQL, PostgreSQL等数据库
+
+## 安装步骤
+
+1. 克隆仓库到本地
+```bash
+git clone https://github.com/yourusername/file-manager.git
+cd file-manager
+```
+
+2. 创建并激活虚拟环境
+```bash
+# 使用 venv (Python内置)
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
+
+3. 安装依赖
+```bash
+pip install -r requirements.txt
+```
+
+4. 初始化数据库
+```bash
+flask init-db
+```
+
+5. 创建管理员账户
+```bash
+flask create-admin
+```
+
+6. 初始化默认文件类型和分类
+```bash
+flask init-extensions
+flask init-categories
+```
+
+7. 启动应用
+```bash
+flask run
+```
+
+## 配置说明
+
+系统配置主要通过以下方式进行：
+
+1. 环境变量（推荐用于生产环境）
+2. `.env` 文件（推荐用于开发环境）
+3. `config.py` 文件中的默认配置
+
+主要配置项:
+
+- `SECRET_KEY`: 应用密钥，用于会话安全
+- `DATABASE_URL`: 数据库连接URL
+- `UPLOAD_FOLDER`: 文件上传目录
+- `MAX_CONTENT_LENGTH`: 最大上传文件大小（字节）
+
+## API文档
+
+系统提供以下API接口：
+
+### 获取所有分类
+```
+GET /api/categories
+```
+
+### 获取分类下所有文件
+```
+GET /api/categories/<category_id>/files
+```
+
+### 获取文件属性
+```
+GET /api/files/<file_guid>
+```
+
+### 获取文件内容
+```
+GET /api/files/<file_guid>/content
+```
+
+## 开发计划
+
+- [ ] 添加HTTPS支持
+- [ ] 增加文件版本控制
+- [ ] 支持批量上传/下载
+- [ ] 增加文件预览功能
+- [ ] 支持更多文件格式
+- [ ] 增加文件分享功能
+
+## 许可证
+
+本项目采用 MIT 许可证 

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}编辑密钥 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">编辑密钥</h1>
+        <p class="text-muted">修改密钥信息</p>
+    </div>
+    <a href="{{ url_for('admin.encryption_keys') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> 返回密钥列表
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-xl-6 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.edit_key', key_id=key.id) }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">密钥名称</label>
+                        <input type="text" id="name" name="name" class="form-control" value="{{ key.name }}" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="form-label">描述</label>
+                        <textarea id="description" name="description" class="form-control" rows="3">{{ key.description or '' }}</textarea>
+                        <div class="form-text">可选，对密钥用途的简短说明</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>注意：</strong> 出于安全考虑，密钥的加密密码无法修改。如需使用新的加密密码，请创建新的密钥。
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('admin.encryption_keys') }}" class="btn btn-secondary me-2">取消</a>
+                        <button type="submit" class="btn btn-primary">保存更改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

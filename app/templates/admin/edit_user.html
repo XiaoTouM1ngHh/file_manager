@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}编辑用户 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">编辑用户</h1>
+        <p class="text-muted">修改用户信息</p>
+    </div>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> 返回用户列表
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-xl-6 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="fs-5 fw-semibold text-dark mb-0">用户: {{ user.username }}</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" id="username" class="form-control" value="{{ user.username }}" disabled>
+                        <div class="form-text">用户名不可修改</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">电子邮件</label>
+                        <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+                    </div>
+                    
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" {% if user.is_admin %}checked{% endif %}
+                        {% if user.is_admin and user.id == current_user.id %}disabled{% endif %}>
+                        <label class="form-check-label" for="is_admin">管理员</label>
+                        <div class="form-text">
+                            {% if user.is_admin and user.id == current_user.id %}
+                            您不能取消自己的管理员权限
+                            {% else %}
+                            管理员可以访问系统管理功能
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-secondary me-2">取消</a>
+                        <button type="submit" class="btn btn-primary">保存更改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}服务器错误 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height: 400px;">
+    <div class="text-center">
+        <div class="display-1 fw-bold text-muted mb-4">500</div>
+        <h1 class="fs-2 fw-bold text-dark mb-2">服务器错误</h1>
+        <p class="text-muted mb-4">抱歉，服务器发生错误，请稍后再试</p>
+        <a href="{{ url_for('file.index') }}" class="btn btn-primary">
+            <i class="fas fa-home me-2"></i> 返回首页
+        </a>
+    </div>
+</div>
+{% endblock %} 

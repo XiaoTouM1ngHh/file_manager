@@ -1,0 +1,56 @@
+{% if pagination.pages > 1 %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="分页导航">
+        <ul class="pagination">
+            <!-- 上一页按钮 -->
+            <li class="page-item {% if pagination.page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for(request.endpoint, page=pagination.page-1, **request.args) }}" aria-label="上一页">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            
+            <!-- 第一页 -->
+            {% if pagination.page > 3 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for(request.endpoint, page=1, **request.args) }}">1</a>
+            </li>
+            
+            <!-- 省略号 -->
+            {% if pagination.page > 4 %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% endif %}
+            {% endif %}
+            
+            <!-- 页码 -->
+            {% for page_num in range(max(1, pagination.page - 2), min(pagination.pages + 1, pagination.page + 3)) %}
+            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for(request.endpoint, page=page_num, **request.args) }}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+            
+            <!-- 最后页 -->
+            {% if pagination.page < pagination.pages - 2 %}
+            <!-- 省略号 -->
+            {% if pagination.page < pagination.pages - 3 %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% endif %}
+            
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for(request.endpoint, page=pagination.pages, **request.args) }}">{{ pagination.pages }}</a>
+            </li>
+            {% endif %}
+            
+            <!-- 下一页按钮 -->
+            <li class="page-item {% if pagination.page == pagination.pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for(request.endpoint, page=pagination.page+1, **request.args) }}" aria-label="下一页">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %} 

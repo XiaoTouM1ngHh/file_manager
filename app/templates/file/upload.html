@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}上传文件 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="fs-2 fw-bold text-dark">上传文件</h1>
+    <p class="text-muted">上传新文件到系统</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="fs-5 fw-semibold">文件信息</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('file.upload') }}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file-input" class="form-label">选择文件</label>
+                        <div class="p-4 mb-2 border border-2 border-dashed rounded text-center">
+                            <i class="fas fa-cloud-upload-alt text-muted mb-2 fs-1"></i>
+                            <div class="text-muted">
+                                <label for="file-input" class="btn btn-sm btn-outline-primary me-2">
+                                    选择文件
+                                    <input id="file-input" name="file" type="file" class="d-none" required>
+                                </label>
+                                <span>或拖放文件到此处</span>
+                            </div>
+                            <p class="form-text mt-2" id="file-preview">支持的文件类型：{{ ', '.join(config['ALLOWED_EXTENSIONS']) }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="filename" class="form-label">文件名</label>
+                        <input type="text" id="filename" name="filename" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">文件说明</label>
+                        <textarea id="description" name="description" rows="3" class="form-control"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">文件分类</label>
+                        <select id="category_id" name="category_id" class="form-select" required>
+                            <option value="">-- 选择分类 --</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="encryption_key_id" class="form-label">加密密钥 (可选)</label>
+                        <select id="encryption_key_id" name="encryption_key_id" class="form-select">
+                            <option value="">-- 不加密 --</option>
+                            {% for key in keys %}
+                            <option value="{{ key.id }}">{{ key.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">如果选择密钥，文件将被加密存储</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('file.index') }}" class="btn btn-secondary me-2">取消</a>
+                        <button type="submit" class="btn btn-primary">上传文件</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="fs-5 fw-semibold">上传说明</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h4 class="fw-medium fs-6">文件格式</h4>
+                    <p class="small text-muted">支持的文件格式包括：{{ ', '.join(config['ALLOWED_EXTENSIONS']) }}</p>
+                </div>
+                    
+                <div class="mb-3">
+                    <h4 class="fw-medium fs-6">文件大小</h4>
+                    <p class="small text-muted">最大上传文件大小为 {{ config['MAX_CONTENT_LENGTH'] / 1024 / 1024 }}MB</p>
+                </div>
+                    
+                <div class="mb-3">
+                    <h4 class="fw-medium fs-6">文件加密</h4>
+                    <p class="small text-muted">选择密钥后，文件将使用强加密算法加密存储，只有拥有密钥的用户才能解密查看文件内容</p>
+                </div>
+                    
+                <div class="mb-3">
+                    <h4 class="fw-medium fs-6">文件分类</h4>
+                    <p class="small text-muted">为文件选择合适的分类，便于后续查找和管理</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 文件上传预览
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        var fileName = e.target.files[0]?.name || '未选择文件';
+        document.getElementById('file-preview').textContent = '已选择: ' + fileName;
+        
+        // 自动填充文件名
+        if (e.target.files[0]) {
+            let nameWithoutExt = fileName.split('.').slice(0, -1).join('.');
+            if (nameWithoutExt) {
+                document.getElementById('filename').value = nameWithoutExt;
+            }
+        }
+    });
+</script>
+{% endblock %} 

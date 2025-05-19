@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}文件管理 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark">文件管理</h1>
+        {% if current_category %}
+        <p class="text-muted">当前分类: {{ current_category.name }}</p>
+        {% endif %}
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+        <div class="position-relative">
+            <input type="text" id="file-filter" class="form-control ps-4" placeholder="搜索文件...">
+            <div class="position-absolute top-50 start-0 translate-middle-y ms-2">
+                <i class="fas fa-search text-muted"></i>
+            </div>
+        </div>
+        <a href="{{ url_for('file.upload') }}" class="btn btn-primary d-flex align-items-center justify-content-center">
+            <i class="fas fa-upload me-2"></i> 上传文件
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- 左侧分类列表 -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="fs-5 fw-semibold">文件分类</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('file.index') }}" class="list-group-item list-group-item-action py-3 {% if not current_category %}active{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-folder me-3 {% if not current_category %}text-white{% else %}text-muted{% endif %}"></i>
+                            <span>所有文件</span>
+                        </div>
+                    </a>
+                    {% for category in categories %}
+                    <a href="{{ url_for('file.files_by_category', category_id=category.id) }}" class="list-group-item list-group-item-action py-3 {% if current_category and current_category.id == category.id %}active{% endif %}">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-folder me-3 {% if current_category and current_category.id == category.id %}text-white{% else %}text-muted{% endif %}"></i>
+                            <span>{{ category.name }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧文件列表 -->
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="fs-5 fw-semibold mb-0">文件列表</h3>
+                <span class="text-muted small">共 {{ files|length }} 个文件</span>
+            </div>
+            <div class="card-body p-0">
+                {% if files %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>文件名</th>
+                                <th>分类</th>
+                                <th>大小</th>
+                                <th>上传时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in files %}
+                            <tr class="file-item" data-filename="{{ file.filename }}" data-description="{{ file.description }}">
+                                <td class="align-middle">
+                                    <div class="d-flex align-items-center">
+                                        {% if file.is_encrypted %}
+                                        <i class="fas fa-lock text-warning me-2"></i>
+                                        {% else %}
+                                        <i class="fas fa-file text-primary me-2"></i>
+                                        {% endif %}
+                                        <a href="{{ url_for('file.file_details', file_guid=file.guid) }}" class="text-decoration-none">
+                                            {{ file.filename }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td class="align-middle">{{ file.category.name }}</td>
+                                <td class="align-middle">
+                                    {% set size_kb = file.size / 1024 %}
+                                    {% if size_kb < 1024 %}
+                                    {{ "%.2f"|format(size_kb) }} KB
+                                    {% else %}
+                                    {% set size_mb = size_kb / 1024 %}
+                                    {% if size_mb < 1024 %}
+                                    {{ "%.2f"|format(size_mb) }} MB
+                                    {% else %}
+                                    {% set size_gb = size_mb / 1024 %}
+                                    {{ "%.2f"|format(size_gb) }} GB
+                                    {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle">{{ file.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td class="align-middle">
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('file.download_file', file_guid=file.guid) }}" class="btn btn-sm btn-outline-primary" title="下载">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <a href="{{ url_for('file.edit_file', file_guid=file.guid) }}" class="btn btn-sm btn-outline-warning" title="编辑">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="删除" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteFileModal{{ file.id }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                        
+                                        <!-- 删除确认模态框 -->
+                                        <div class="modal fade" id="deleteFileModal{{ file.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">确认删除</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        确定要删除文件 <strong>{{ file.filename }}</strong> 吗？此操作不可撤销。
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                                        <form action="{{ url_for('file.delete_file', file_guid=file.guid) }}" method="POST">
+                                                            <button type="submit" class="btn btn-danger">删除</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="py-5">
+                    <div class="text-center">
+                        <i class="fas fa-folder-open text-muted fs-1 mb-3"></i>
+                        <p class="text-muted">没有找到文件</p>
+                        <a href="{{ url_for('file.upload') }}" class="mt-3 btn btn-primary">
+                            <i class="fas fa-upload me-2"></i> 上传新文件
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 文件搜索功能
+    document.getElementById('file-filter').addEventListener('input', function(e) {
+        let searchTerm = e.target.value.toLowerCase();
+        let fileItems = document.querySelectorAll('.file-item');
+        
+        fileItems.forEach(item => {
+            let filename = item.dataset.filename.toLowerCase();
+            let description = (item.dataset.description || '').toLowerCase();
+            
+            if (filename.includes(searchTerm) || description.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %} 

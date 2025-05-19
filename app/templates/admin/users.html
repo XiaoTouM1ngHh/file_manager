@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}用户管理 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">用户管理</h1>
+        <p class="text-muted">管理系统用户账户</p>
+    </div>
+    <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i> 创建新用户
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if users.items %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>角色</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users.items %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>
+                            {{ user.username }}
+                            {% if user.id == current_user.id %}
+                            <span class="badge bg-info ms-1">当前</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                            <span class="badge bg-danger">管理员</span>
+                            {% else %}
+                            <span class="badge bg-secondary">普通用户</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-warning" 
+                                        data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.id }}">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                {% if user.id != current_user.id %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- 重置密码确认对话框 -->
+                            <div class="modal fade" id="resetPasswordModal{{ user.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">重置密码确认</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            确定要重置用户 <strong>{{ user.username }}</strong> 的密码吗？将生成一个新的随机密码。
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                            <form action="{{ url_for('admin.reset_password', user_id=user.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-warning">重置密码</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 删除用户确认对话框 -->
+                            {% if user.id != current_user.id %}
+                            <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">删除用户确认</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            确定要删除用户 <strong>{{ user.username }}</strong> 吗？此操作不可撤销。
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                            <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-danger">删除用户</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if users.pages > 1 %}
+        <div class="d-flex justify-content-center p-3">
+            <nav>
+                <ul class="pagination">
+                    {% if users.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.users', page=users.prev_num) }}">上一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">上一页</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page in users.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                        {% if page %}
+                            {% if page == users.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.users', page=page) }}">{{ page }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if users.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.users', page=users.next_num) }}">下一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">下一页</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3 text-muted">
+                <i class="fas fa-users fa-3x"></i>
+            </div>
+            <h3 class="fs-5">暂无用户数据</h3>
+            <p class="text-muted">点击上方按钮创建新用户</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

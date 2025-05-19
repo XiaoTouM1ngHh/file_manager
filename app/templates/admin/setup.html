@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}系统初始化 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="fs-4 mb-0">系统初始化 - 创建管理员账户</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i> 欢迎使用文件管理系统！系统检测到还没有创建管理员账户，请先创建一个管理员账户以启动系统。
+                </div>
+                
+                <form method="POST" action="{{ url_for('admin.setup') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" id="username" name="username" class="form-control" required autofocus>
+                        <div class="form-text">用户名必须是3-20个字符，只能包含字母、数字、下划线或连字符</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">电子邮件</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                        <div class="form-text">密码长度至少8个字符，需包含大写字母、小写字母、数字和特殊字符中的至少3种</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label">确认密码</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">创建管理员账户并初始化系统</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-shield-alt me-1"></i> 管理员账户拥有系统的所有权限，请妥善保管账户信息
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

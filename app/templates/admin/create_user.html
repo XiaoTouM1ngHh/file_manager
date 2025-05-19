@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}创建用户 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">创建新用户</h1>
+        <p class="text-muted">添加新的系统用户</p>
+    </div>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i> 返回用户列表
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-xl-6 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.create_user') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" id="username" name="username" class="form-control" value="{{ username or '' }}" required>
+                        <div class="form-text">用户名必须是3-20个字符，只能包含字母、数字、下划线或连字符</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">电子邮件</label>
+                        <input type="email" id="email" name="email" class="form-control" value="{{ email or '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                        <div class="form-text">密码长度至少8个字符，需包含大写字母、小写字母、数字和特殊字符中的至少3种</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">确认密码</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin">
+                        <label class="form-check-label" for="is_admin">设为管理员</label>
+                        <div class="form-text">管理员可以访问系统管理功能</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-secondary me-2">取消</a>
+                        <button type="submit" class="btn btn-primary">创建用户</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="fs-4 fw-semibold text-dark">用户登录</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" id="username" name="username" class="form-control" value="{{ username or '' }}" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" id="remember" name="remember" class="form-check-input">
+                        <label for="remember" class="form-check-label">记住我</label>
+                    </div>
+                    <div class="mb-0">
+                        <button type="submit" class="btn btn-primary w-100">登录</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="text-muted small mb-0">
+                    请联系管理员创建账户
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

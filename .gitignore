@@ -1,0 +1,58 @@
+# 字节编译/优化/DLL文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 单元测试/覆盖率报告
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+
+# Flask相关
+instance/
+.webassets-cache
+
+# 实际文件上传目录
+app/static/uploads/
+
+# 日志文件
+logs/
+*.log
+
+# SQLite数据库文件
+*.db
+*.sqlite
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS相关
+.DS_Store
+Thumbs.db 

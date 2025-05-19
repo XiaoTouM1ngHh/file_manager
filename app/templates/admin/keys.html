@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}密钥管理 - 文件管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="fs-2 fw-bold text-dark mb-1">密钥管理</h1>
+        <p class="text-muted">管理文件加密密钥</p>
+    </div>
+    <a href="{{ url_for('admin.create_key') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i> 创建新密钥
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if keys.items %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>描述</th>
+                        <th>创建者</th>
+                        <th>使用文件数</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key in keys.items %}
+                    <tr>
+                        <td>{{ key.id }}</td>
+                        <td>{{ key.name }}</td>
+                        <td>{{ key.description or '无' }}</td>
+                        <td>{{ key.owner.username }}</td>
+                        <td><span class="badge bg-info">{{ key.files.count() }}</span></td>
+                        <td>{{ key.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('admin.download_key', key_id=key.id) }}" class="btn btn-sm btn-outline-success" title="下载密钥">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <a href="{{ url_for('admin.edit_key', key_id=key.id) }}" class="btn btn-sm btn-outline-primary" title="编辑密钥">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                       data-bs-toggle="modal" data-bs-target="#deleteKeyModal{{ key.id }}"
+                                       {% if key.files.count() > 0 %}disabled{% endif %}
+                                       title="删除密钥">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- 删除密钥确认对话框 -->
+                            <div class="modal fade" id="deleteKeyModal{{ key.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">删除密钥确认</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            {% if key.files.count() > 0 %}
+                                            <div class="alert alert-danger">
+                                                该密钥正被 {{ key.files.count() }} 个文件使用，无法删除。
+                                            </div>
+                                            {% else %}
+                                            确定要删除密钥 <strong>{{ key.name }}</strong> 吗？此操作不可撤销。
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                            {% if key.files.count() == 0 %}
+                                            <form action="{{ url_for('admin.delete_key', key_id=key.id) }}" method="POST">
+                                                <button type="submit" class="btn btn-danger">删除密钥</button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if keys.pages > 1 %}
+        <div class="d-flex justify-content-center p-3">
+            <nav>
+                <ul class="pagination">
+                    {% if keys.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.encryption_keys', page=keys.prev_num) }}">上一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">上一页</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page in keys.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                        {% if page %}
+                            {% if page == keys.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.encryption_keys', page=page) }}">{{ page }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if keys.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.encryption_keys', page=keys.next_num) }}">下一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">下一页</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-3 text-muted">
+                <i class="fas fa-key fa-3x"></i>
+            </div>
+            <h3 class="fs-5">暂无密钥数据</h3>
+            <p class="text-muted">点击上方按钮创建新密钥</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
