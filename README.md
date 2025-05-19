@@ -40,23 +40,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. 初始化数据库
-```bash
-flask init-db
-```
-
-5. 创建管理员账户
-```bash
-flask create-admin
-```
-
-6. 初始化默认文件类型和分类
-```bash
-flask init-extensions
-flask init-categories
-```
-
-7. 启动应用
+4. 启动应用
 ```bash
 flask run
 ```
