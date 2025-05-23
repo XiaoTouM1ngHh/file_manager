@@ -4,7 +4,9 @@ from datetime import timedelta
 class Config:
     """基本配置类"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard_to_guess_string'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///instance/file_manager.db'
+    # 使用os.path.join确保路径在不同操作系统上兼容
+    INSTANCE_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f'sqlite:///{os.path.join(INSTANCE_PATH, "file_manager.db")}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # 上传文件配置

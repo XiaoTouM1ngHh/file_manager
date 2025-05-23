@@ -100,10 +100,17 @@ def register_startup_checks(app):
         _first_request_processed = True
         
         # 检查是否存在管理员账户
-        if not check_admin_exists():
-            # 如果当前访问的已经是setup页面，不再重定向
+        try:
+            if not check_admin_exists():
+                # 如果当前访问的已经是setup页面，不再重定向
+                if request.endpoint != 'admin.setup':
+                    flash('系统尚未创建管理员账户，请先创建一个管理员账户', 'warning')
+                    return redirect(url_for('admin.setup'))
+        except Exception as e:
+            app.logger.error(f"检查管理员账户时发生错误: {str(e)}")
+            # 如果不是setup页面，重定向到setup
             if request.endpoint != 'admin.setup':
-                flash('系统尚未创建管理员账户，请先创建一个管理员账户', 'warning')
+                flash('系统初始化出现问题，请创建管理员账户', 'warning')
                 return redirect(url_for('admin.setup'))
 
 
@@ -113,24 +120,33 @@ def check_database(app):
     
     # 如果是SQLite数据库
     if db_path.startswith('sqlite:///'):
-        # 移除sqlite:///前缀获取文件路径
         db_file = db_path.replace('sqlite:///', '')
         
-        # 确保目录存在
+        # 确保数据库目录存在
         db_dir = os.path.dirname(db_file)
         if db_dir and not os.path.exists(db_dir):
-            os.makedirs(db_dir)
-            app.logger.info(f"创建数据库目录: {db_dir}")
+            try:
+                os.makedirs(db_dir)
+                app.logger.info(f"创建数据库目录: {db_dir}")
+            except Exception as e:
+                app.logger.error(f"创建数据库目录失败: {str(e)}")
         
         # 检查数据库文件
         if os.path.exists(db_file):
             app.logger.info(f"数据库文件 {db_file} 已存在")
         else:
-            app.logger.info(f"数据库文件 {db_file} 不存在，正在创建...")
-            db.create_all()
-            app.logger.info("数据库表创建完成")
+            try:
+                app.logger.info(f"数据库文件 {db_file} 不存在，正在创建...")
+                db.create_all()
+                app.logger.info("数据库表创建完成")
+            except Exception as e:
+                app.logger.error(f"创建数据库失败: {str(e)}")
 
 
 def check_admin_exists():
     """检查是否存在管理员账户"""
-    return User.query.filter_by(is_admin=True).first() is not None 
+    try:
+        return User.query.filter_by(is_admin=True).first() is not None
+    except Exception as e:
+        current_app.logger.error(f"查询管理员账户时出错: {str(e)}")
+        return False 
