@@ -244,6 +244,77 @@ def edit_file(file_guid):
                 flash('所选分类不存在', 'error')
                 return render_template('file/edit.html', file=file, categories=categories)
             
+            # 处理文件替换
+            uploaded_file = request.files.get('file')
+            if uploaded_file and uploaded_file.filename:
+                # 获取允许的文件扩展名
+                allowed_extensions = {ext.extension for ext in AllowedExtension.query.filter_by(is_active=True).all()}
+                
+                # 检查文件扩展名
+                if not allowed_file(uploaded_file.filename, allowed_extensions):
+                    flash('不允许的文件类型', 'error')
+                    return render_template('file/edit.html', file=file, categories=categories)
+                
+                # 保存原始文件名
+                original_filename = secure_filename(uploaded_file.filename)
+                
+                # 获取完整的原文件路径
+                full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file.file_path)
+                
+                # 临时保存上传的文件
+                temp_path = os.path.join(tempfile.gettempdir(), f"temp_{uuid.uuid4().hex}{os.path.splitext(original_filename)[1]}")
+                uploaded_file.save(temp_path)
+                
+                # 计算新文件大小
+                file_size = os.path.getsize(temp_path)
+                
+                # 如果文件已加密，则需要加密新文件
+                if file.is_encrypted and file.encryption_key:
+                    # 解析密钥和盐值
+                    key_parts = file.encryption_key.key_value.split(':')
+                    if len(key_parts) != 2:
+                        flash('密钥格式错误', 'error')
+                        os.remove(temp_path)
+                        return render_template('file/edit.html', file=file, categories=categories)
+                    
+                    key_value = key_parts[0]
+                    
+                    try:
+                        # 加密文件并计算MD5
+                        md5_hash = encrypt_file(temp_path, full_path, key_value)
+                        # 更新文件记录
+                        file.md5 = md5_hash
+                        file.size = file_size
+                        file.original_filename = original_filename
+                    except Exception as e:
+                        logger.error(f"文件加密失败: {str(e)}")
+                        flash('文件加密失败', 'error')
+                        os.remove(temp_path)
+                        return render_template('file/edit.html', file=file, categories=categories)
+                else:
+                    # 不加密，直接替换文件
+                    try:
+                        # 删除原文件
+                        if os.path.exists(full_path):
+                            os.remove(full_path)
+                        
+                        # 使用shutil.copy2替代os.rename，解决跨磁盘移动问题
+                        import shutil
+                        shutil.copy2(temp_path, full_path)
+                        os.remove(temp_path)
+                        
+                        # 计算新文件的MD5
+                        md5_hash = calculate_md5(full_path)
+                        
+                        # 更新文件记录
+                        file.md5 = md5_hash
+                        file.size = file_size
+                        file.original_filename = original_filename
+                    except Exception as e:
+                        logger.error(f"替换文件失败: {str(e)}")
+                        flash('替换文件失败', 'error')
+                        return render_template('file/edit.html', file=file, categories=categories)
+            
             # 更新文件信息
             file.filename = filename
             file.description = description
