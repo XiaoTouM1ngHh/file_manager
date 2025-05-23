@@ -1,16 +1,50 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器错误 - 文件管理系统</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f9fa;
+        }
+        main {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <main class="py-5">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-center" style="min-height: 70vh;">
+                <div class="text-center">
+                    <div class="display-1 fw-bold text-muted mb-4">500</div>
+                    <h1 class="fs-2 fw-bold text-dark mb-2">服务器内部错误</h1>
+                    <p class="text-muted mb-4">抱歉，服务器遇到了一个错误，无法完成您的请求</p>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i> 返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
 
-{% block title %}服务器错误 - 文件管理系统{% endblock %}
+    <footer class="bg-white shadow-sm py-4 mt-auto">
+        <div class="container">
+            <div class="text-center text-muted small">
+                <p>&copy; 2025 文件管理系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
 
-{% block content %}
-<div class="d-flex align-items-center justify-content-center" style="min-height: 400px;">
-    <div class="text-center">
-        <div class="display-1 fw-bold text-muted mb-4">500</div>
-        <h1 class="fs-2 fw-bold text-dark mb-2">服务器错误</h1>
-        <p class="text-muted mb-4">抱歉，服务器发生错误，请稍后再试</p>
-        <a href="{{ url_for('file.index') }}" class="btn btn-primary">
-            <i class="fas fa-home me-2"></i> 返回首页
-        </a>
-    </div>
-</div>
-{% endblock %} 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

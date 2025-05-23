@@ -76,7 +76,14 @@ def register_error_handlers(app):
     @app.errorhandler(500)
     def internal_server_error(e):
         return render_template('errors/500.html'), 500
-        
+    
+    # 处理favicon.ico请求
+    @app.route('/favicon.ico')
+    def favicon():
+        from flask import send_from_directory
+        return send_from_directory(os.path.join(app.root_path, 'static'),
+                                  'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 def register_startup_checks(app):
     """注册应用启动时的检查函数"""
@@ -106,8 +113,19 @@ def check_database(app):
     
     # 如果是SQLite数据库
     if db_path.startswith('sqlite:///'):
+        # 移除sqlite:///前缀获取文件路径
         db_file = db_path.replace('sqlite:///', '')
-        if not os.path.exists(db_file):
+        
+        # 确保目录存在
+        db_dir = os.path.dirname(db_file)
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir)
+            app.logger.info(f"创建数据库目录: {db_dir}")
+        
+        # 检查数据库文件
+        if os.path.exists(db_file):
+            app.logger.info(f"数据库文件 {db_file} 已存在")
+        else:
             app.logger.info(f"数据库文件 {db_file} 不存在，正在创建...")
             db.create_all()
             app.logger.info("数据库表创建完成")
