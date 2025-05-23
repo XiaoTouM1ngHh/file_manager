@@ -159,17 +159,10 @@ def upload():
             else:
                 # 不加密，直接保存文件
                 os.rename(temp_path, file_path)
-                # 计算加密后的MD5（即使不加密也使用相同的加密方式计算MD5）
                 try:
-                    # 生成临时密钥用于计算MD5
-                    temp_key = Fernet.generate_key()
-                    temp_encrypted_path = os.path.join(tempfile.gettempdir(), f"temp_encrypted_{safe_filename}")
-                    # 加密文件
-                    md5_hash = encrypt_file(file_path, temp_encrypted_path, temp_key.decode('utf-8'))
+                    # 计算文件MD5
+                    md5_hash = calculate_md5(file_path)
                     new_file.md5 = md5_hash
-                    # 清理临时文件
-                    if os.path.exists(temp_encrypted_path):
-                        os.remove(temp_encrypted_path)
                 except Exception as e:
                     logger.error(f"计算文件MD5失败: {str(e)}")
                     flash('计算文件MD5失败', 'error')
